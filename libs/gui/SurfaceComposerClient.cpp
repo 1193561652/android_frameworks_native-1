@@ -1116,7 +1116,21 @@ SurfaceComposerClient::Transaction& SurfaceComposerClient::Transaction::setAlpha
     registerSurfaceControlForCallback(sc);
     return *this;
 }
-
+#ifdef BAT
+SurfaceComposerClient::Transaction& SurfaceComposerClient::Transaction::setBatIndex(
+    const sp<SurfaceControl>& sc, float index) {
+    layer_state_t* s = getLayerState(sc);
+    if (!s) {
+        mStatus = BAD_INDEX;
+        return *this;
+    }
+    s->what |= layer_state_t::eBatIndexChanged;
+    s->batIndex = index;
+    // ALOGE("BAT Transaction::setIndex %f", index);
+    registerSurfaceControlForCallback(sc);
+    return *this;
+}
+#endif
 SurfaceComposerClient::Transaction& SurfaceComposerClient::Transaction::setLayerStack(
         const sp<SurfaceControl>& sc, uint32_t layerStack) {
     layer_state_t* s = getLayerState(sc);

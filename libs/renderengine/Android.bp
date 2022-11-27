@@ -63,6 +63,8 @@ filegroup {
         "gl/GLFramebuffer.cpp",
         "gl/GLImage.cpp",
         "gl/GLShadowTexture.cpp",
+        "gl/GLExtTexture.cpp",
+        "gl/BatBitmap.cpp",
         "gl/GLShadowVertexGenerator.cpp",
         "gl/GLSkiaShadowPort.cpp",
         "gl/GLVertexBuffer.cpp",

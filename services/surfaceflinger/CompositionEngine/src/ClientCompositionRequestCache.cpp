@@ -32,7 +32,10 @@ LayerFE::LayerSettings getLayerSettingsSnapshot(const LayerFE::LayerSettings& se
 
 inline bool equalIgnoringSource(const renderengine::LayerSettings& lhs,
                                 const renderengine::LayerSettings& rhs) {
-    return lhs.geometry == rhs.geometry && lhs.alpha == rhs.alpha &&
+    return lhs.geometry == rhs.geometry && lhs.alpha == rhs.alpha && 
+#ifdef BAT
+            lhs.batIndex == rhs.batIndex && 
+#endif
             lhs.sourceDataspace == rhs.sourceDataspace &&
             lhs.colorTransform == rhs.colorTransform &&
             lhs.disableBlending == rhs.disableBlending && lhs.shadow == rhs.shadow &&

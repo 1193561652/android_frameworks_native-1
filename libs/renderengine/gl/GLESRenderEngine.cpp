@@ -1084,6 +1084,7 @@ status_t GLESRenderEngine::drawLayers(const DisplaySettings& display,
                                       const bool useFramebufferCache, base::unique_fd&& bufferFence,
                                       base::unique_fd* drawFence) {
     ATRACE_CALL();
+    ALOGE("BAT drawLayers in");
     if (layers.empty()) {
         ALOGV("Drawing empty layer stack");
         return NO_ERROR;
@@ -1215,7 +1216,14 @@ status_t GLESRenderEngine::drawLayers(const DisplaySettings& display,
         mState.maxMasteringLuminance = maxLuminance;
         mState.maxContentLuminance = maxLuminance;
         mState.projectionMatrix = projectionMatrix * layer->geometry.positionTransform;
-
+#ifdef BAT
+        mState.extIndex = (float)(layer->batIndex);
+        if (buildExtTexture((float)(layer->batIndex))) {
+            setupLayerExtTexturing(mExtTexture.getTexture());
+        } else {
+            mState.extTextureEnabled = false;
+        }
+#endif
         const FloatRect bounds = layer->geometry.boundaries;
         Mesh::VertexArray<vec2> position(mesh.getPositionArray<vec2>());
         position[0] = vec2(bounds.left, bounds.top);
@@ -1318,7 +1326,21 @@ status_t GLESRenderEngine::drawLayers(const DisplaySettings& display,
     checkErrors();
     return NO_ERROR;
 }
+#ifdef BAT
+bool GLESRenderEngine::buildExtTexture(float index) {
+    if (index < 1.0f) {
+        // 0.0f-0.999
+        // 1-55
+        int iindex = (index * 55) + 1;
+        if (iindex > 55) iindex = 55;
+        ALOGE("BAT buildExtTexture index:%f iindex:%d", index, iindex);
+        return mExtTexture.reload(iindex);
+    } else {
 
+    }
+    return false;
+}
+#endif
 void GLESRenderEngine::setViewportAndProjection(Rect viewport, Rect clip) {
     ATRACE_CALL();
     mVpWidth = viewport.getWidth();
@@ -1368,6 +1390,7 @@ void GLESRenderEngine::setDisplayMaxLuminance(const float maxLuminance) {
 }
 
 void GLESRenderEngine::setupLayerTexturing(const Texture& texture) {
+    glActiveTexture(GL_TEXTURE0);
     GLuint target = texture.getTextureTarget();
     glBindTexture(target, texture.getTextureName());
     GLenum filter = GL_NEAREST;
@@ -1382,6 +1405,26 @@ void GLESRenderEngine::setupLayerTexturing(const Texture& texture) {
     mState.texture = texture;
     mState.textureEnabled = true;
 }
+
+#ifdef BAT
+void GLESRenderEngine::setupLayerExtTexturing(const Texture& texture)
+{
+    glActiveTexture(GL_TEXTURE2);
+    GLuint target = texture.getTextureTarget();
+    glBindTexture(target, texture.getTextureName());
+    GLenum filter = GL_NEAREST;
+    if (texture.getFiltering()) {
+        filter = GL_LINEAR;
+    }
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, filter);
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, filter);
+
+    mState.extTexture = texture;
+    mState.extTextureEnabled = true;
+}
+#endif
 
 void GLESRenderEngine::setColorTransform(const mat4& colorTransform) {
     mState.colorMatrix = colorTransform;

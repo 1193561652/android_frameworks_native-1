@@ -60,6 +60,8 @@
 #include "SurfaceTracing.h"
 #include "TransactionCallbackInvoker.h"
 
+#define BAT
+
 using namespace android::surfaceflinger;
 
 namespace android {
@@ -186,6 +188,10 @@ public:
         half4 color;
         float cornerRadius;
         int backgroundBlurRadius;
+
+#ifdef BAT
+        float batIndex;
+#endif
 
         gui::WindowInfo inputInfo;
         wp<Layer> touchableRegionCrop;
@@ -393,6 +399,9 @@ public:
     virtual bool setRelativeLayer(const sp<IBinder>& relativeToHandle, int32_t relativeZ);
 
     virtual bool setAlpha(float alpha);
+#ifdef BAT
+    virtual bool setBatIndex(float index);
+#endif
     virtual bool setColor(const half3& /*color*/) { return false; };
 
     // Set rounded corner radius for this layer and its children.
@@ -762,6 +771,9 @@ public:
     // of parent Surfaces in the hierarchy (alpha's will be multiplied
     // down the hierarchy).
     half getAlpha() const;
+#ifdef BAT
+    half getBatIndex() const;
+#endif
     half4 getColor() const;
     int32_t getBackgroundBlurRadius() const;
     bool drawShadows() const { return mEffectiveShadowRadius > 0.f; };

@@ -19,31 +19,48 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 #include <GLES3/gl3.h>
-
-#include "GLShadowTexture.h"
-#include "GLSkiaShadowPort.h"
-
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
+#include <log/log.h>
+#include "GLExtTexture.h"
+#include "BatBitmap.h"
 namespace android {
 namespace renderengine {
 namespace gl {
 
-GLShadowTexture::GLShadowTexture() {
-    fillShadowTextureData(mTextureData, SHADOW_TEXTURE_WIDTH);
-    glActiveTexture(GL_TEXTURE0);
+GLExtTexture::GLExtTexture() {
+    glActiveTexture(GL_TEXTURE2);
     glGenTextures(1, &mName);
     glBindTexture(GL_TEXTURE_2D, mName);
-    glTexImage2D(GL_TEXTURE_2D, 0 /* base image level */, GL_ALPHA, SHADOW_TEXTURE_WIDTH,
-                 SHADOW_TEXTURE_HEIGHT, 0 /* border */, GL_ALPHA, GL_UNSIGNED_BYTE, mTextureData);
     mTexture.init(Texture::TEXTURE_2D, mName);
     mTexture.setFiltering(true);
-    mTexture.setDimensions(SHADOW_TEXTURE_WIDTH, 1);
 }
 
-GLShadowTexture::~GLShadowTexture() {
+GLExtTexture::~GLExtTexture() {
     glDeleteTextures(1, &mName);
 }
 
-const Texture& GLShadowTexture::getTexture() {
+bool GLExtTexture::reload(int index) {
+    // static uint8_t* data = new uint8_t[640*480*4];
+
+    char filename[256] = {0};
+    snprintf(filename, sizeof(filename)-1, "/data/batman/%d.bmp", index);
+    static BatBitmap bmp;
+    bmp.loadBitmap(filename);
+    glActiveTexture(GL_TEXTURE2); 
+    glBindTexture(GL_TEXTURE_2D, mName);
+    if (bmp.getByte() != nullptr && bmp.getWidth() > 0 && bmp.getHeight() > 0) {
+        glTexImage2D(GL_TEXTURE_2D, 0 /* base image level */, GL_RGB, bmp.getWidth(), bmp.getHeight(), 0 /* border */, GL_RGB, GL_UNSIGNED_BYTE, bmp.getByte());
+    }
+
+    return true;
+}
+
+const Texture& GLExtTexture::getTexture() {
     return mTexture;
 }
 

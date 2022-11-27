@@ -25,7 +25,7 @@
 #include <renderengine/private/Description.h>
 #include <utils/Singleton.h>
 #include <utils/TypeHelpers.h>
-
+#define BAT
 namespace android {
 
 class String8;
@@ -122,6 +122,12 @@ public:
             DISPLAY_COLOR_TRANSFORM_MATRIX_MASK = 1 << DISPLAY_COLOR_TRANSFORM_MATRIX_SHIFT,
             DISPLAY_COLOR_TRANSFORM_MATRIX_OFF = 0 << DISPLAY_COLOR_TRANSFORM_MATRIX_SHIFT,
             DISPLAY_COLOR_TRANSFORM_MATRIX_ON = 1 << DISPLAY_COLOR_TRANSFORM_MATRIX_SHIFT,
+#ifdef BAT
+            BAT_SHIFT = 14,
+            BAT_MASK = 1 << BAT_SHIFT,
+            BAT_LT_ONE = 1 << BAT_SHIFT,
+            BAT_EQ_ONE = 0 << BAT_SHIFT,
+#endif
         };
 
         inline Key() : mKey(0) {}
@@ -141,6 +147,11 @@ public:
         inline bool hasRoundedCorners() const {
             return (mKey & ROUNDED_CORNERS_MASK) == ROUNDED_CORNERS_ON;
         }
+#ifdef BAT
+        inline bool hasBat() const {
+            return (mKey & BAT_MASK) == BAT_LT_ONE;
+        }
+#endif
         inline bool drawShadows() const { return (mKey & SHADOW_MASK) == SHADOW_ON; }
         inline bool hasInputTransformMatrix() const {
             return (mKey & INPUT_TRANSFORM_MATRIX_MASK) == INPUT_TRANSFORM_MATRIX_ON;

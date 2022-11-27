@@ -32,9 +32,15 @@
 #include <renderengine/private/Description.h>
 #include <sys/types.h>
 #include "GLShadowTexture.h"
+
 #include "ImageManager.h"
 
 #define EGL_NO_CONFIG ((EGLConfig)0)
+
+#define BAT
+#ifdef BAT
+#include "GLExtTexture.h"
+#endif
 
 namespace android {
 
@@ -174,6 +180,9 @@ private:
     void setupLayerBlending(bool premultipliedAlpha, bool opaque, bool disableTexture,
                             const half4& color, float cornerRadius);
     void setupLayerTexturing(const Texture& texture);
+#ifdef BAT
+    void setupLayerExtTexturing(const Texture& texture);
+#endif
     void setupFillWithColor(float r, float g, float b, float a);
     void setColorTransform(const mat4& colorTransform);
     void setDisplayColorTransform(const mat4& colorTransform);
@@ -186,7 +195,9 @@ private:
     void setSourceDataSpace(ui::Dataspace source);
     void setOutputDataSpace(ui::Dataspace dataspace);
     void setDisplayMaxLuminance(const float maxLuminance);
-
+#ifdef BAT
+    bool buildExtTexture(float index);
+#endif
     // drawing
     void drawMesh(const Mesh& mesh);
 
@@ -202,6 +213,9 @@ private:
     GLuint mVpHeight;
     Description mState;
     std::unique_ptr<GLShadowTexture> mShadowTexture = nullptr;
+#ifdef BAT
+    GLExtTexture mExtTexture;
+#endif
 
     mat4 mSrgbToXyz;
     mat4 mDisplayP3ToXyz;

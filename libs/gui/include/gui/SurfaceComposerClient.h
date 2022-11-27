@@ -45,6 +45,8 @@
 #include <gui/WindowInfosListenerReporter.h>
 #include <math/vec3.h>
 
+#define BAT
+
 namespace android {
 
 class HdrCapabilities;
@@ -451,6 +453,10 @@ public:
                 const Region& transparentRegion);
         Transaction& setAlpha(const sp<SurfaceControl>& sc,
                 float alpha);
+#ifdef BAT
+        Transaction& setBatIndex(const sp<SurfaceControl>& sc,
+                float index);
+#endif
         Transaction& setMatrix(const sp<SurfaceControl>& sc,
                 float dsdx, float dtdx, float dtdy, float dsdy);
         Transaction& setCrop(const sp<SurfaceControl>& sc, const Rect& crop);

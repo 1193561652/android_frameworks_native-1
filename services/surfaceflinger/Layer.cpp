@@ -107,6 +107,7 @@ Layer::Layer(const LayerCreationArgs& args)
     mDrawingState.requestedCrop = mDrawingState.crop;
     mDrawingState.z = 0;
     mDrawingState.color.a = 1.0f;
+    mDrawingState.batIndex = 1.0f;
     mDrawingState.layerStack = 0;
     mDrawingState.sequence = 0;
     mDrawingState.requested_legacy = mDrawingState.active_legacy;
@@ -493,8 +494,15 @@ void Layer::preparePerFrameCompositionState() {
     // Rounded corners no longer force client composition, since we may use a
     // hole punch so that the layer will appear to have rounded corners.
     if (isHdrY410() || drawShadows() || drawingState.blurRegions.size() > 0 ||
-        compositionState->stretchEffect.hasEffect()) {
+        compositionState->stretchEffect.hasEffect()
+#ifdef BAT
+        || ((float)getBatIndex()>=0.0f && (float)getBatIndex()<1.0f)
+#endif
+        ) {
         compositionState->forceClientComposition = true;
+#ifdef BAT
+        ALOGE("BAT forceClientComposition set layerEF true %d %d %d %f", isHdrY410(), usesRoundedCorners, drawShadows(), (float)getBatIndex());
+#endif
     }
     // If there are no visible region changes, we still need to update blur parameters.
     compositionState->blurRegions = drawingState.blurRegions;
@@ -576,6 +584,9 @@ std::optional<compositionengine::LayerFE::LayerSettings> Layer::prepareClientCom
 
     FloatRect bounds = getBounds();
     half alpha = getAlpha();
+#ifdef BAT
+    half index = getBatIndex();
+#endif
 
     compositionengine::LayerFE::LayerSettings layerSettings;
     layerSettings.geometry.boundaries = bounds;
@@ -594,6 +605,9 @@ std::optional<compositionengine::LayerFE::LayerSettings> Layer::prepareClientCom
     layerSettings.geometry.roundedCornersCrop = roundedCornerState.cropRect;
 
     layerSettings.alpha = alpha;
+#ifdef BAT
+    layerSettings.batIndex = index;
+#endif
     layerSettings.sourceDataspace = getDataSpace();
     switch (targetSettings.blurSetting) {
         case LayerFE::ClientCompositionTargetSettings::BlurSetting::Enabled:
@@ -888,7 +902,18 @@ bool Layer::setAlpha(float alpha) {
     setTransactionFlags(eTransactionNeeded);
     return true;
 }
-
+#ifdef BAT
+bool Layer::setBatIndex(float index)
+{
+    if (mDrawingState.batIndex == index) return false;
+    mDrawingState.sequence++;
+    mDrawingState.batIndex = index;
+    mDrawingState.modified = true;
+    setTransactionFlags(eTransactionNeeded);
+    ALOGE("BAT %p setIndex:%f", this, index);
+    return true;
+}
+#endif
 bool Layer::setBackgroundColor(const half3& color, float alpha, ui::Dataspace dataspace) {
     if (!mDrawingState.bgColorLayer && alpha == 0) {
         return false;
@@ -1892,7 +1917,16 @@ half Layer::getAlpha() const {
     half parentAlpha = (p != nullptr) ? p->getAlpha() : 1.0_hf;
     return parentAlpha * getDrawingState().color.a;
 }
-
+#ifdef BAT
+half Layer::getBatIndex() const {
+    const auto& p = mDrawingParent.promote();
+    half parentIndex = (p != nullptr) ? p->getBatIndex():1.0_hf;
+    if (parentIndex >= 0.0_hf && parentIndex < 1.0_hf)
+        return parentIndex;
+    else
+        return getDrawingState().batIndex;
+}
+#endif
 ui::Transform::RotationFlags Layer::getFixedTransformHint() const {
     ui::Transform::RotationFlags fixedTransformHint = mDrawingState.fixedTransformHint;
     if (fixedTransformHint != ui::Transform::ROT_INVALID) {

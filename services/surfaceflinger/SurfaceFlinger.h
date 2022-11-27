@@ -83,6 +83,7 @@
 #include <unordered_set>
 #include <utility>
 
+#define BAT
 using namespace android::surfaceflinger;
 
 namespace android {

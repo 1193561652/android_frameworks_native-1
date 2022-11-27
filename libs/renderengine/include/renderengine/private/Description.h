@@ -19,7 +19,7 @@
 
 #include <renderengine/Texture.h>
 #include <ui/GraphicTypes.h>
-
+#define BAT
 namespace android {
 namespace renderengine {
 
@@ -61,8 +61,17 @@ struct Description {
     Texture texture;
     bool textureEnabled = false;
 
+#ifdef BAT
+    Texture extTexture;
+    bool extTextureEnabled = false;
+#endif
+
     // color used when texturing is disabled or when setting alpha.
     half4 color;
+
+#ifdef BAT
+    float extIndex;
+#endif
 
     // true if the sampled pixel values are in Y410/BT2020 rather than RGBA
     bool isY410BT2020 = false;

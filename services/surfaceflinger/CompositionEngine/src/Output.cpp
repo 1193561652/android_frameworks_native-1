@@ -430,7 +430,7 @@ void Output::prepare(const compositionengine::CompositionRefreshArgs& refreshArg
 void Output::present(const compositionengine::CompositionRefreshArgs& refreshArgs) {
     ATRACE_CALL();
     ALOGV(__FUNCTION__);
-
+    // ALOGE("BAT Output::present in");
     updateColorProfile(refreshArgs);
     updateCompositionState(refreshArgs);
     planComposition();
@@ -997,8 +997,9 @@ void Output::devOptRepaintFlash(const compositionengine::CompositionRefreshArgs&
 void Output::finishFrame(const compositionengine::CompositionRefreshArgs& refreshArgs) {
     ATRACE_CALL();
     ALOGV(__FUNCTION__);
-
+    // ALOGE("BAT Output::finishFrame in");
     if (!getState().isEnabled) {
+        // ALOGE("BAT Output::finishFrame return 1");
         return;
     }
 
@@ -1006,18 +1007,20 @@ void Output::finishFrame(const compositionengine::CompositionRefreshArgs& refres
     // the composition completes.
     auto optReadyFence = composeSurfaces(Region::INVALID_REGION, refreshArgs);
     if (!optReadyFence) {
+        // ALOGE("BAT Output::finishFrame return 2");
         return;
     }
 
     // swap buffers (presentation)
     mRenderSurface->queueBuffer(std::move(*optReadyFence));
+    // ALOGE("BAT Output::finishFrame return 3");
 }
 
 std::optional<base::unique_fd> Output::composeSurfaces(
         const Region& debugRegion, const compositionengine::CompositionRefreshArgs& refreshArgs) {
     ATRACE_CALL();
     ALOGV(__FUNCTION__);
-
+    // ALOGE("BAT Output::composeSurfaces in");
     const auto& outputState = getState();
     OutputCompositionState& outputCompositionState = editState();
     const TracedOrdinal<bool> hasClientComposition = {"hasClientComposition",
@@ -1058,17 +1061,22 @@ std::optional<base::unique_fd> Output::composeSurfaces(
             ALOGW("Dequeuing buffer for display [%s] failed, bailing out of "
                   "client composition for this frame",
                   mName.c_str());
+            ALOGE("BAT Dequeuing buffer for display [%s] failed, bailing out of "
+                  "client composition for this frame",
+                  mName.c_str());
+            // ALOGE("BAT Output::composeSurfaces return 1");
             return {};
         }
     }
-
+    ALOGE("BAT hasClientComposition=%d", (int)hasClientComposition);
     base::unique_fd readyFence;
     if (!hasClientComposition) {
         setExpensiveRenderingExpected(false);
+        // ALOGE("BAT Output::composeSurfaces return 2");
         return readyFence;
     }
 
-    ALOGV("hasClientComposition");
+    // ALOGV("hasClientComposition");
 
     renderengine::DisplaySettings clientCompositionDisplay;
     clientCompositionDisplay.physicalDisplay = outputState.framebufferSpace.content;
@@ -1109,6 +1117,7 @@ std::optional<base::unique_fd> Output::composeSurfaces(
                                                    clientCompositionLayers)) {
             outputCompositionState.reusedClientComposition = true;
             setExpensiveRenderingExpected(false);
+            // ALOGE("BAT Output::composeSurfaces return 3");
             return readyFence;
         }
         mClientCompositionRequestCache->add(tex->getBuffer()->getId(), clientCompositionDisplay,
@@ -1160,7 +1169,7 @@ std::optional<base::unique_fd> Output::composeSurfaces(
                                              std::make_shared<FenceTime>(
                                                      new Fence(dup(readyFence.get()))));
     }
-
+    // ALOGE("BAT Output::composeSurfaces return 4");
     return readyFence;
 }
 

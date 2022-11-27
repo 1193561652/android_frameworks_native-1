@@ -314,8 +314,13 @@ private:
     bool precacheToneMapperShaderOnly = false;
     bool supportsBackgroundBlur = false;
     RenderEngine::ContextPriority contextPriority = RenderEngine::ContextPriority::MEDIUM;
+#ifdef BAT
+    RenderEngine::RenderEngineType renderEngineType =
+            RenderEngine::RenderEngineType::GLES;
+#else
     RenderEngine::RenderEngineType renderEngineType =
             RenderEngine::RenderEngineType::SKIA_GL_THREADED;
+#endif
 };
 
 } // namespace renderengine

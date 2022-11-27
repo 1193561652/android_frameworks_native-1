@@ -28,6 +28,8 @@
 
 ANDROID_SINGLETON_STATIC_INSTANCE(android::renderengine::gl::ProgramCache)
 
+#define BAT
+
 namespace android {
 namespace renderengine {
 namespace gl {
@@ -186,9 +188,12 @@ ProgramCache::Key ProgramCache::computeKey(const Description& description) {
             .set(Key::ROUNDED_CORNERS_MASK,
                  description.cornerRadius > 0 ? Key::ROUNDED_CORNERS_ON : Key::ROUNDED_CORNERS_OFF)
             .set(Key::SHADOW_MASK, description.drawShadows ? Key::SHADOW_ON : Key::SHADOW_OFF);
+
     needs.set(Key::Y410_BT2020_MASK,
               description.isY410BT2020 ? Key::Y410_BT2020_ON : Key::Y410_BT2020_OFF);
-
+#ifdef BAT
+    needs.set(Key::BAT_MASK, description.extTextureEnabled ? Key::BAT_LT_ONE : Key::BAT_EQ_ONE);
+#endif
     if (needs.hasTransformMatrix() ||
         (description.inputTransferFunction != description.outputTransferFunction)) {
         switch (description.inputTransferFunction) {
@@ -551,6 +556,7 @@ void ProgramCache::generateOETF(Formatter& fs, const Key& needs) {
     }
 }
 
+
 String8 ProgramCache::generateVertexShader(const Key& needs) {
     Formatter vs;
     if (needs.hasTextureCoords()) {
@@ -570,6 +576,9 @@ String8 ProgramCache::generateVertexShader(const Key& needs) {
     vs << "attribute vec4 position;"
        << "uniform mat4 projection;"
        << "uniform mat4 texture;"
+#ifdef BAT
+       << "uniform float extIndex;"
+#endif
        << "void main(void) {" << indent << "gl_Position = projection * position;";
     if (needs.hasTextureCoords()) {
         vs << "outTexCoords = (texture * texCoords).st;";
@@ -599,7 +608,9 @@ String8 ProgramCache::generateFragmentShader(const Key& needs) {
     } else if (needs.getTextureTarget() == Key::TEXTURE_2D) {
         fs << "uniform sampler2D sampler;";
     }
-
+#ifdef BAT
+    fs << "uniform sampler2D extsampler;";
+#endif
     if (needs.hasTextureCoords()) {
         fs << "varying vec2 outTexCoords;";
     }
@@ -724,6 +735,10 @@ String8 ProgramCache::generateFragmentShader(const Key& needs) {
         generateOETF(fs, needs);
     }
 
+#ifdef BAT
+    fs << "uniform float extIndex;";
+#endif
+
     fs << "void main(void) {" << indent;
     if (needs.drawShadows()) {
         fs << "gl_FragColor = getShadowColor();";
@@ -783,6 +798,19 @@ String8 ProgramCache::generateFragmentShader(const Key& needs) {
             fs << "gl_FragColor.a *= applyCornerRadius(outCropCoords);";
         }
     }
+
+#ifdef BAT
+    if (needs.hasBat()) {
+        fs << "if (extIndex < 1.0) {";
+        fs << "    vec4 extclor = vec4(texture2D(extsampler, outTexCoords));";
+        fs << "    float fa = 1.0 - extclor.r;";
+        fs << "    gl_FragColor.r = 0.0 * fa + gl_FragColor.r * (1.0-fa) * gl_FragColor.a;";
+        fs << "    gl_FragColor.g = 0.0 * fa + gl_FragColor.g * (1.0-fa) * gl_FragColor.a;";
+        fs << "    gl_FragColor.b = 0.0 * fa + gl_FragColor.b * (1.0-fa) * gl_FragColor.a;";
+        fs << "    gl_FragColor.a = fa + gl_FragColor.a * (1.0-fa);";
+        fs << "}";
+    }
+#endif
 
     fs << dedent << "}";
     return fs.getString();

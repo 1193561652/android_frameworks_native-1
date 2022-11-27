@@ -32,6 +32,7 @@ std::unique_ptr<RenderEngine> RenderEngine::create(const RenderEngineCreationArg
     // Keep the ability to override by PROPERTIES:
     char prop[PROPERTY_VALUE_MAX];
     property_get(PROPERTY_DEBUG_RENDERENGINE_BACKEND, prop, "");
+    ALOGE("BAT prop:%s renderEngineType:%d", prop, (int)renderEngineType);
     if (strcmp(prop, "gles") == 0) {
         renderEngineType = RenderEngineType::GLES;
     }

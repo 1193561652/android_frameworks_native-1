@@ -23,6 +23,8 @@
 #include <renderengine/private/Description.h>
 #include "ProgramCache.h"
 
+#define BAT
+
 namespace android {
 
 class String8;
@@ -90,6 +92,12 @@ private:
 
     /* location of the sampler uniform */
     GLint mSamplerLoc;
+
+#ifdef BAT
+    GLint mExtIndex;
+
+    GLint mExtSamplerLoc;
+#endif
 
     /* location of the color uniform */
     GLint mColorLoc;

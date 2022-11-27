@@ -43,6 +43,9 @@ layer_state_t::layer_state_t()
         h(0),
         layerStack(0),
         alpha(0),
+#ifdef BAT
+        batIndex(1.0),
+#endif
         flags(0),
         mask(0),
         reserved(0),
@@ -89,6 +92,9 @@ status_t layer_state_t::write(Parcel& output) const
     SAFE_PARCEL(output.writeUint32, h);
     SAFE_PARCEL(output.writeUint32, layerStack);
     SAFE_PARCEL(output.writeFloat, alpha);
+#ifdef BAT
+    SAFE_PARCEL(output.writeFloat, batIndex);
+#endif
     SAFE_PARCEL(output.writeUint32, flags);
     SAFE_PARCEL(output.writeUint32, mask);
     SAFE_PARCEL(matrix.write, output);
@@ -192,6 +198,9 @@ status_t layer_state_t::read(const Parcel& input)
     SAFE_PARCEL(input.readUint32, &h);
     SAFE_PARCEL(input.readUint32, &layerStack);
     SAFE_PARCEL(input.readFloat, &alpha);
+#ifdef BAT
+    SAFE_PARCEL(input.readFloat, &batIndex);
+#endif
 
     SAFE_PARCEL(input.readUint32, &flags);
 
@@ -476,6 +485,12 @@ void layer_state_t::merge(const layer_state_t& other) {
         what |= eAlphaChanged;
         alpha = other.alpha;
     }
+#ifdef BAT
+    if (other.what & eBatIndexChanged) {
+        what |= eBatIndexChanged;
+        batIndex = other.batIndex;
+    }
+#endif
     if (other.what & eMatrixChanged) {
         what |= eMatrixChanged;
         matrix = other.matrix;

@@ -68,8 +68,12 @@ std::vector<compositionengine::LayerFE::LayerSettings> EffectLayer::prepareClien
     } else if (hasBlur() || drawShadows()) {
         layerSettings->skipContentDraw = true;
         results.push_back(*layerSettings);
+    } 
+#ifdef BAT
+    else if (getBatIndex()>0.0_hf && getBatIndex() < 1.0_hf) {
+        results.push_back(*layerSettings);
     }
-
+#endif
     return results;
 }
 

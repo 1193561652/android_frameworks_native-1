@@ -31,6 +31,8 @@
 
 #include <iosfwd>
 
+#define BAT
+
 namespace android {
 namespace renderengine {
 
@@ -143,6 +145,11 @@ struct LayerSettings {
     // Alpha option to blend with the source pixels
     half alpha = half(0.0);
 
+#ifdef BAT
+    // Index
+    half batIndex = half(1.0);
+#endif
+
     // Color space describing how the source pixels should be interpreted.
     ui::Dataspace sourceDataspace = ui::Dataspace::UNKNOWN;
 
@@ -220,7 +227,11 @@ static inline bool operator==(const LayerSettings& lhs, const LayerSettings& rhs
             lhs.skipContentDraw == rhs.skipContentDraw && lhs.shadow == rhs.shadow &&
             lhs.backgroundBlurRadius == rhs.backgroundBlurRadius &&
             lhs.blurRegionTransform == rhs.blurRegionTransform &&
-            lhs.stretchEffect == rhs.stretchEffect;
+            lhs.stretchEffect == rhs.stretchEffect 
+#ifdef BAT
+            && lhs.batIndex == rhs.batIndex
+#endif
+            ;
 }
 
 // Defining PrintTo helps with Google Tests.

@@ -2071,7 +2071,7 @@ bool SurfaceFlinger::handleMessageTransaction() {
 
 void SurfaceFlinger::onMessageRefresh() {
     ATRACE_CALL();
-
+    // ALOGE("BAT SurfaceFlinger::onMessageRefresh in");
     mRefreshPending = false;
 
     compositionengine::CompositionRefreshArgs refreshArgs;
@@ -4050,6 +4050,13 @@ uint32_t SurfaceFlinger::setClientStateLocked(
         if (layer->setAlpha(s.alpha))
             flags |= eTraversalNeeded;
     }
+#ifdef BAT
+    if (what & layer_state_t::eBatIndexChanged) {
+        if (layer->setBatIndex(s.batIndex))
+            flags |= eTraversalNeeded;
+        ALOGE("BAT set layer index %f", s.batIndex);
+    }
+#endif
     if (what & layer_state_t::eColorChanged) {
         if (layer->setColor(s.color))
             flags |= eTraversalNeeded;

@@ -43,6 +43,8 @@
 #include <ui/Transform.h>
 #include <utils/Errors.h>
 
+#define BAT
+
 namespace android {
 
 class Parcel;
@@ -125,6 +127,7 @@ struct layer_state_t {
         eStretchChanged = 0x2000'00000000,
         eTrustedOverlayChanged = 0x4000'00000000,
         eDropInputModeChanged = 0x8000'00000000,
+        eBatIndexChanged = 0x10000'00000000,
     };
 
     layer_state_t();
@@ -154,6 +157,9 @@ struct layer_state_t {
     uint32_t h;
     uint32_t layerStack;
     float alpha;
+#ifdef BAT
+    float batIndex;
+#endif
     uint32_t flags;
     uint32_t mask;
     uint8_t reserved;
